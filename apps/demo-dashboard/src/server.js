@@ -10,6 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.join(__dirname, '..', 'public');
 const workspaceRoot = path.resolve(__dirname, '..', '..', '..');
+const preferredPort = Number(process.env.PORT || 3000);
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -21,9 +22,13 @@ const server = http.createServer(async (req, res) => {
       return sendFile(res, path.join(publicDir, 'app.js'), 'application/javascript');
     }
 
+    if (req.method === 'GET' && req.url === '/styles.css') {
+      return sendFile(res, path.join(publicDir, 'styles.css'), 'text/css');
+    }
+
     if (req.method === 'POST' && req.url === '/api/computer-use') {
       const body = await readJson(req);
-      const prompt = body.prompt || "Open a browser, search for 'Wikipedia OpenAI', and summarize the first result";
+      const prompt = body.prompt || "Open a browser, search for 'One Piece', and summarize the first result";
       const output = await runNode(path.join(workspaceRoot, 'src', 'cli.js'), [prompt], workspaceRoot);
       return sendJson(res, { ok: true, output });
     }
@@ -55,9 +60,23 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(3000, () => {
-  console.log('Demo dashboard running at http://localhost:3000');
-});
+startServer(preferredPort);
+
+function startServer(port) {
+  server.once('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      const nextPort = port + 1;
+      console.log(`Port ${port} is busy, trying http://localhost:${nextPort}`);
+      startServer(nextPort);
+      return;
+    }
+    throw error;
+  });
+
+  server.listen(port, () => {
+    console.log(`Demo dashboard running at http://localhost:${port}`);
+  });
+}
 
 async function runNode(scriptPath, args, cwd) {
   const { stdout, stderr } = await execFileAsync('node', [scriptPath, ...args], {

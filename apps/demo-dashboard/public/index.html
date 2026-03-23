@@ -3,44 +3,50 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Demo Dashboard</title>
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 24px; background: #0b1020; color: #eef2ff; }
-      h1 { margin-top: 0; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-      .card { background: #151c33; border: 1px solid #2b355d; border-radius: 14px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
-      textarea { width: 100%; min-height: 90px; border-radius: 10px; border: 1px solid #3a4677; background: #0f1530; color: #eef2ff; padding: 12px; box-sizing: border-box; }
-      button { margin-top: 10px; background: #6d7cff; color: white; border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
-      button:hover { background: #8090ff; }
-      pre { white-space: pre-wrap; word-break: break-word; background: #0d1328; border-radius: 10px; padding: 12px; min-height: 180px; overflow: auto; }
-      .muted { color: #aab5e8; font-size: 14px; }
-    </style>
+    <title>AI Projects Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <h1>AI Demo Dashboard</h1>
-    <p class="muted">Run the three working prototypes from one local web page.</p>
-    <div class="grid">
-      <section class="card">
-        <h2>Project 1: Computer-use Agent</h2>
+    <header class="hero">
+      <div class="hero__inner">
+        <p class="eyebrow">Local Demo Site</p>
+        <h1>AI Projects Demo</h1>
+        <p class="sub">A simple website with 3 features for your three projects: browser automation, memory, and multi-agent reasoning.</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="feature">
+        <div class="feature__header">
+          <h2>1. Computer-use Agent</h2>
+          <p>Open browser → search → read → summarize</p>
+        </div>
         <textarea id="computerPrompt">Open a browser, search for 'One Piece', and summarize the first result</textarea>
-        <button onclick="runDemo('computer-use', 'computerPrompt', 'computerOutput')">Run</button>
-        <pre id="computerOutput">Waiting...</pre>
+        <button onclick="runDemo('computer-use', 'computerPrompt', 'computerOutput', this)">Run feature</button>
+        <pre id="computerOutput">Ready.</pre>
       </section>
 
-      <section class="card">
-        <h2>Project 2: Memory Assistant</h2>
+      <section class="feature">
+        <div class="feature__header">
+          <h2>2. Personal AI Assistant with Memory</h2>
+          <p>Store conversation history → retrieve relevant memory → answer from past interactions</p>
+        </div>
         <textarea id="memoryPrompt">What did I say about my project yesterday?</textarea>
-        <button onclick="runDemo('memory', 'memoryPrompt', 'memoryOutput')">Run</button>
-        <pre id="memoryOutput">Waiting...</pre>
+        <button onclick="runDemo('memory', 'memoryPrompt', 'memoryOutput', this)">Run feature</button>
+        <pre id="memoryOutput">Ready.</pre>
       </section>
 
-      <section class="card">
-        <h2>Project 3: Multi-Agent System</h2>
+      <section class="feature">
+        <div class="feature__header">
+          <h2>3. Multi-Agent System</h2>
+          <p>Research agent → analysis agent → summary agent</p>
+        </div>
         <textarea id="multiPrompt">Analyze Tesla stock</textarea>
-        <button onclick="runDemo('multi-agent', 'multiPrompt', 'multiOutput')">Run</button>
-        <pre id="multiOutput">Waiting...</pre>
+        <button onclick="runDemo('multi-agent', 'multiPrompt', 'multiOutput', this)">Run feature</button>
+        <pre id="multiOutput">Ready.</pre>
       </section>
-    </div>
+    </main>
+
     <script src="/app.js"></script>
   </body>
 </html>
