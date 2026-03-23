@@ -32,8 +32,12 @@ export class AgentBrowserSession {
     return this.waitForLoad();
   }
 
-  async waitForLoad() {
-    await execFileAsync('agent-browser', ['--session', this.sessionName, 'wait', '--load', 'networkidle']);
+  async waitForLoad(mode = 'networkidle') {
+    await execFileAsync('agent-browser', ['--session', this.sessionName, 'wait', '--load', mode]);
+  }
+
+  async wait(ms) {
+    await execFileAsync('agent-browser', ['--session', this.sessionName, 'wait', String(ms)]);
   }
 
   async snapshot() {

@@ -1,11 +1,11 @@
 {
   "name": "computer-use-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "A simple computer-use agent that can operate a browser to complete tasks.",
+  "description": "A practical computer-use browser agent for search-and-summarize tasks.",
   "scripts": {
     "start": "node src/cli.js",
-    "demo": "node src/cli.js \"Open a browser, search for 'OpenAI', and summarize the first result\""
+    "demo": "node src/cli.js \"Open a browser, search for 'One Piece', and summarize the first result\""
   }
 }
