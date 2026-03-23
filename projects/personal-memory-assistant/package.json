@@ -1,0 +1,10 @@
+{
+  "name": "personal-memory-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ask": "node src/cli.js",
+    "demo": "node src/cli.js \"What did I say about my project yesterday?\""
+  }
+}
