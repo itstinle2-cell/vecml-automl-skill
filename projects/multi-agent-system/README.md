@@ -1,6 +1,6 @@
 # Multi-Agent System
 
-A local prototype of a general multi-agent system with three roles:
+A local multi-agent prototype with three roles:
 
 1. Research agent
 2. Analysis agent
@@ -13,18 +13,23 @@ cd /Users/vecml-macmini/.openclaw/workspace/projects/multi-agent-system
 node src/cli.js "Analyze Tesla stock"
 ```
 
-You can replace the prompt with other tasks.
-
 ## Architecture
 
-- `src/agents/research.js` — gathers structured findings
-- `src/agents/analysis.js` — interprets research output
+- `src/agents/research.js` — gathers evidence from a local registry of real public web sources
+- `src/agents/analysis.js` — interprets evidence
 - `src/agents/summary.js` — formats final response
 - `src/orchestrator.js` — coordinates agents
+- `data/evidence-sources.json` — topic-to-source mapping
 
-## Notes
+## Current behavior
 
-- This is a general local prototype.
-- It supports arbitrary prompts structurally.
-- Domain depth depends on the logic inside the research agent.
-- Next step: attach live tools / web retrieval for richer results.
+- The system now uses real fetched evidence from public web pages instead of placeholder-only reasoning.
+- The research agent looks up matching source URLs from `data/evidence-sources.json`, fetches them, and passes excerpts to downstream agents.
+- The analysis agent reasons over gathered evidence.
+- The summary agent returns a grounded final answer with sources.
+
+## Current limitation
+
+- This version uses a curated source registry instead of open-ended live search.
+- It is evidence-backed, but not yet a fully general autonomous web researcher.
+- Next step: add reliable live search discovery so the research agent can find sources dynamically.

@@ -1,0 +1,42 @@
+{
+  "tesla stock": [
+    {
+      "title": "Tesla, Inc. - Britannica",
+      "url": "https://www.britannica.com/topic/Tesla-Motors"
+    },
+    {
+      "title": "Tesla, Inc. - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tesla,_Inc."
+    }
+  ],
+  "tesla": [
+    {
+      "title": "Tesla, Inc. - Britannica",
+      "url": "https://www.britannica.com/topic/Tesla-Motors"
+    },
+    {
+      "title": "Tesla, Inc. - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Tesla,_Inc."
+    }
+  ],
+  "remote work": [
+    {
+      "title": "Remote work - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Remote_work"
+    },
+    {
+      "title": "Telecommuting | Britannica",
+      "url": "https://www.britannica.com/topic/telecommuting"
+    }
+  ],
+  "python official documentation": [
+    {
+      "title": "Python Documentation",
+      "url": "https://www.python.org/doc/"
+    },
+    {
+      "title": "Python Docs",
+      "url": "https://docs.python.org/3/"
+    }
+  ]
+}

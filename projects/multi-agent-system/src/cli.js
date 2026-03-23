@@ -7,5 +7,5 @@ if (!task) {
   process.exit(1);
 }
 
-const result = runMultiAgentSystem(task);
+const result = await runMultiAgentSystem(task);
 console.log(result.summary);

@@ -1,57 +1,82 @@
-function includesAny(text, keywords) {
-  return keywords.some((keyword) => text.includes(keyword));
-}
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
-export function researchAgent(task) {
-  const normalized = task.toLowerCase();
+const execFileAsync = promisify(execFile);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const registryPath = path.join(__dirname, '..', '..', 'data', 'evidence-sources.json');
 
-  if (includesAny(normalized, ['stock', 'shares', 'market', 'invest'])) {
-    return {
-      task,
-      domain: 'finance',
-      findings: [
-        'This looks like a finance/investment-style question.',
-        'Useful inputs include price trend, earnings, valuation, growth expectations, and recent news.',
-        'A strong research pass should separate company fundamentals from market sentiment.'
-      ],
-      missingData: ['live market data', 'recent company news', 'latest financial results']
-    };
-  }
+export async function researchAgent(task) {
+  const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+  const sources = resolveSources(task, registry);
 
-  if (includesAny(normalized, ['project', 'plan', 'roadmap', 'deadline', 'milestone'])) {
-    return {
-      task,
-      domain: 'project/work',
-      findings: [
-        'This appears to be a work or project-planning request.',
-        'Relevant research should gather goals, scope, timeline, risks, and dependencies.',
-        'A helpful agent should identify ambiguities before making recommendations.'
-      ],
-      missingData: ['specific project context', 'constraints', 'success criteria']
-    };
-  }
-
-  if (includesAny(normalized, ['pros and cons', 'compare', 'comparison', 'tradeoff', 'trade-off'])) {
-    return {
-      task,
-      domain: 'comparison',
-      findings: [
-        'This task asks for balanced comparison or tradeoff analysis.',
-        'Research should identify the main dimensions of comparison rather than jump straight to a conclusion.',
-        'A good output should cover benefits, downsides, and context-dependent factors.'
-      ],
-      missingData: ['user priorities', 'context-specific constraints']
-    };
+  const evidence = [];
+  for (const source of sources) {
+    const content = await fetchReadable(source.url).catch(() => null);
+    evidence.push({
+      title: source.title,
+      url: source.url,
+      source: extractHostname(source.url),
+      content: extractUsefulExcerpt(content)
+    });
   }
 
   return {
     task,
-    domain: 'general',
-    findings: [
-      'The task was received and classified as a general inquiry.',
-      'A research agent should gather relevant facts, examples, and context before interpretation.',
-      'The system can still structure the problem even when domain-specific connectors are not yet attached.'
-    ],
-    missingData: ['live external sources if needed']
+    evidence,
+    sourcesUsed: sources.length
   };
+}
+
+function resolveSources(task, registry) {
+  const normalized = task.toLowerCase();
+  for (const [key, sources] of Object.entries(registry)) {
+    if (normalized.includes(key)) return sources;
+  }
+
+  return [
+    {
+      title: 'General topic source',
+      url: 'https://en.wikipedia.org/wiki/Main_Page'
+    }
+  ];
+}
+
+async function fetchReadable(url) {
+  const { stdout } = await execFileAsync('curl', ['-L', '-A', 'Mozilla/5.0', '--max-time', '15', url], {
+    maxBuffer: 1024 * 1024 * 6
+  });
+  return stripHtml(stdout);
+}
+
+function stripHtml(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractUsefulExcerpt(text) {
+  if (!text) return null;
+  const clean = text.replace(/\s+/g, ' ').trim();
+  const sentences = clean.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const useful = sentences.filter((s) => s.length > 60 && !/jump to content|main menu|navigation|search search|appearance/i.test(s));
+  return (useful.slice(0, 3).join(' ') || clean.slice(0, 600)).trim();
+}
+
+function extractHostname(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
 }
