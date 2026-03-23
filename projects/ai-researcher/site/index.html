@@ -1,0 +1,148 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Post-Training RL Methods Survey</title>
+    <style>
+      body { font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background: #0b1020; color: #eef2ff; }
+      main { max-width: 980px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1, h2, h3 { color: #fff; }
+      p, li { line-height: 1.65; color: #d6ddff; }
+      .card { background: #121a34; border: 1px solid #2a3767; border-radius: 16px; padding: 20px; margin: 18px 0; }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      pre { white-space: pre-wrap; background: #0b1328; border-radius: 12px; padding: 14px; overflow: auto; color: #d8e1ff; }
+      a { color: #9db2ff; }
+      .muted { color: #9eabdc; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Survey of Recent Post-Training RL Methods for Language Models</h1>
+      <p class="muted">Built locally from recent paper pages, supporting resources, and directly inspected code from cloned repositories.</p>
+
+      <section class="card">
+        <h2>Scope</h2>
+        <p>This survey focuses on post-training methods that improve language-model behavior after pretraining, especially reinforcement-learning-based or preference-optimization-based methods used for reasoning, alignment, and response quality. I prioritized methods that are both conceptually important and connected to real open-source codebases that could be inspected locally.</p>
+      </section>
+
+      <section class="card">
+        <h2>Selected publications / artifacts</h2>
+        <ol>
+          <li><strong>Direct Preference Optimization: Your Language Model is Secretly a Reward Model</strong> (2023) — DPO</li>
+          <li><strong>DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models</strong> (2024) — GRPO framing referenced in TRL implementation</li>
+          <li><strong>ORPO: Monolithic Preference Optimization without Reference Model</strong> (2024) — represented by TRL ORPO trainer</li>
+          <li><strong>Supervised Fine-Tuning versus Reinforcement Learning: A Study of Post-Training Methods for Large Language Models</strong> (2026)</li>
+          <li><strong>OpenRLHF Technical Report / Framework Documentation</strong> (framework artifact; PPO, GRPO, REINFORCE++, DPO implementations)</li>
+        </ol>
+      </section>
+
+      <section class="card">
+        <h2>Method 1: DPO</h2>
+        <p>DPO is one of the most influential simplifications of RLHF-era post-training. Instead of fitting a separate reward model and then running PPO against it, DPO directly optimizes preference pairs using log-probability differences between chosen and rejected responses. In practice, this made preference post-training more accessible and easier to reproduce.</p>
+        <p>Direct code evidence from the cloned reference implementation:</p>
+        <pre>def preference_loss(policy_chosen_logps: torch.FloatTensor,
+                    policy_rejected_logps: torch.FloatTensor,
+                    reference_chosen_logps: torch.FloatTensor,
+                    reference_rejected_logps: torch.FloatTensor,
+                    beta: float,
+                    label_smoothing: float = 0.0,
+                    ipo: bool = False,
+                    reference_free: bool = False) -&gt; Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
+    ...
+    pi_logratios = policy_chosen_logps - policy_rejected_logps
+    ref_logratios = reference_chosen_logps - reference_rejected_logps
+    ...
+    logits = pi_logratios - ref_logratios
+    ...
+    losses = -F.logsigmoid(beta * logits) * (1 - label_smoothing) - F.logsigmoid(-beta * logits) * label_smoothing</pre>
+        <p>That excerpt comes directly from <code>repos/direct-preference-optimization/trainers.py</code>. It captures the core attraction of DPO: preference optimization becomes a supervised-looking objective over policy/reference log-ratios rather than a separate reward-model-plus-policy-optimization pipeline.</p>
+      </section>
+
+      <section class="card">
+        <h2>Method 2: GRPO</h2>
+        <p>GRPO has become highly relevant in reasoning-focused post-training because it replaces or relaxes some of the machinery of actor-critic RL with group-relative comparisons over generated candidates. This is especially attractive for domains like math reasoning, where relative quality among multiple sampled completions can be informative.</p>
+        <p>Direct code evidence from TRL’s GRPO trainer:</p>
+        <pre>class GRPOTrainer(_BaseTrainer):
+    """
+    Trainer for the Group Relative Policy Optimization (GRPO) method. This algorithm was initially proposed in the
+    paper DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models.
+    """
+
+RewardFunc = str | PreTrainedModel | Callable[..., list[float | None]]
+RolloutFunc = Callable[[list[str], "GRPOTrainer"], dict[str, Any]]</pre>
+        <p>This excerpt from <code>repos/trl/trl/trainer/grpo_trainer.py</code> shows two important practical ideas: (1) GRPO is treated as a first-class trainer rather than an ad hoc script, and (2) reward functions can be either model-based or custom callables, which makes GRPO attractive for domains with verifiable or structured rewards.</p>
+      </section>
+
+      <section class="card">
+        <h2>Method 3: PPO / RLHF pipelines</h2>
+        <p>PPO remains the canonical RLHF-style baseline and production workhorse. Even when newer methods like DPO or GRPO get the attention, PPO-style pipelines still matter because they expose the engineering realities of rollouts, KL control, replay buffers, and distributed actor/critic coordination.</p>
+        <p>Direct code evidence from OpenRLHF:</p>
+        <pre>if self.args.kl_target:
+    self.kl_ctl = AdaptiveKLController(self.args.init_kl_coef, self.args.kl_target, self.args.kl_horizon)
+else:
+    self.kl_ctl = FixedKLController(self.args.init_kl_coef)
+
+self.experience_maker = RemoteExperienceMaker(
+    self.actor_model_group,
+    self.critic_model_group,
+    self.reward_model_group,
+    self.reference_model_group,
+    self.kl_ctl,
+    self.strategy,
+    tokenizer,
+)</pre>
+        <p>This excerpt from <code>repos/OpenRLHF/openrlhf/trainer/ppo_trainer.py</code> illustrates the system-level complexity that DPO tries to avoid. PPO pipelines require explicit management of KL control, rollout experiences, actor/critic/reward/reference components, and often distributed systems machinery.</p>
+      </section>
+
+      <section class="card">
+        <h2>Method 4: ORPO</h2>
+        <p>ORPO is interesting because it keeps the preference-optimization flavor but removes the need for a separate reference model. This matters in practice because reference-model handling adds both memory cost and implementation complexity.</p>
+        <p>Direct code evidence from TRL’s ORPO trainer:</p>
+        <pre>class ORPOTrainer(_BaseTrainer):
+    _paper = {
+        "title": "ORPO: Monolithic Preference Optimization without Reference Model",
+        "id": "2403.07691",
+    }</pre>
+        <p>That excerpt from <code>repos/trl/trl/experimental/orpo/orpo_trainer.py</code> makes the method’s central claim explicit in the trainer itself: preference optimization without a reference model. Conceptually, ORPO sits in the same family as DPO-like methods that trade some RLHF complexity for simpler optimization pipelines.</p>
+      </section>
+
+      <section class="card">
+        <h2>Method 5: Comparative post-training studies</h2>
+        <p>The most practically useful papers are often not new algorithms but comparative studies that ask when SFT is enough, when RL matters, and how gains differ across tasks. The recent paper <em>Supervised Fine-Tuning versus Reinforcement Learning: A Study of Post-Training Methods for Large Language Models</em> is relevant precisely because many teams are trying to decide whether RL-style post-training is worth the extra complexity.</p>
+        <p>The main gap in this area is that many public claims about “reasoning gains” still depend heavily on benchmark selection, reward design, and prompt format. Comparative studies are valuable because they can reveal where RL methods truly outperform simpler baselines and where they mostly reshuffle training signal.</p>
+      </section>
+
+      <section class="card">
+        <h2>Synthesis</h2>
+        <ul>
+          <li><strong>PPO/RLHF</strong> offers the richest control but the heaviest engineering burden.</li>
+          <li><strong>DPO</strong> made preference optimization dramatically simpler and more reproducible.</li>
+          <li><strong>ORPO</strong> pushes simplification further by removing the reference model.</li>
+          <li><strong>GRPO</strong> is especially attractive for reasoning tasks where relative ranking among multiple sampled outputs is informative.</li>
+          <li><strong>Modern frameworks</strong> like TRL and OpenRLHF matter because they operationalize these ideas as reusable trainers rather than one-off paper code.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Future research directions</h2>
+        <ul>
+          <li><strong>Better reward design for reasoning:</strong> Many authors implicitly rely on narrow verifiable rewards or benchmark-specific signals. A major gap is reward functions that capture reasoning quality beyond final-answer correctness.</li>
+          <li><strong>Stability vs simplicity:</strong> DPO/ORPO-style methods are simpler than PPO, but comparative evidence is still emerging on when that simplicity leaves performance on the table.</li>
+          <li><strong>Long-horizon and agentic post-training:</strong> Existing post-training pipelines are still much stronger on single-turn tasks than on multi-step tool use and long-horizon planning.</li>
+          <li><strong>Replay, reflection, and curriculum:</strong> Several recent directions suggest that replay buffers, reflection rewards, and difficulty-aware curricula may be as important as the base RL algorithm.</li>
+          <li><strong>Evaluation realism:</strong> The field still needs stronger evaluations that distinguish genuine reasoning improvements from reward hacking, benchmark overfitting, or verbosity artifacts.</li>
+          <li><strong>Open implementations of recent methods:</strong> One persistent gap is that many recent papers have limited or no official code release, which makes rigorous comparison difficult. This is a major reproducibility bottleneck.</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Local artifacts</h2>
+        <ul>
+          <li>Selected paper manifest: <code>papers/selected-papers.json</code></li>
+          <li>Cloned repos: <code>repos/trl</code>, <code>repos/OpenRLHF</code>, <code>repos/direct-preference-optimization</code></li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

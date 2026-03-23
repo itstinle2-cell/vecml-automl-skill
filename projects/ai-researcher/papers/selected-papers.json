@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+    "year": 2023,
+    "type": "paper",
+    "method": "DPO",
+    "paper_url": "https://arxiv.org/abs/2305.18290",
+    "repo_url": "https://github.com/eric-mitchell/direct-preference-optimization"
+  },
+  {
+    "title": "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models",
+    "year": 2024,
+    "type": "paper",
+    "method": "GRPO",
+    "paper_url": "https://arxiv.org/abs/2402.03300",
+    "repo_url": "https://github.com/huggingface/trl"
+  },
+  {
+    "title": "Supervised Fine-Tuning versus Reinforcement Learning: A Study of Post-Training Methods for Large Language Models",
+    "year": 2026,
+    "type": "paper",
+    "method": "SFT vs RL post-training comparison",
+    "paper_url": "https://arxiv.org/search/?query=Supervised+Fine-Tuning+versus+Reinforcement+Learning%3A+A+Study+of+Post-Training+Methods+for+Large+Language+Models&searchtype=all&source=header",
+    "repo_url": null
+  },
+  {
+    "title": "GRPO and Reflection Reward for Mathematical Reasoning in Large Language Models",
+    "year": 2026,
+    "type": "paper",
+    "method": "GRPO + reflection reward",
+    "paper_url": "https://arxiv.org/search/?query=GRPO+and+Reflection+Reward+for+Mathematical+Reasoning+in+Large+Language+Models&searchtype=all&source=header",
+    "repo_url": null
+  },
+  {
+    "title": "OpenRLHF Technical Report / Framework Documentation",
+    "year": 2025,
+    "type": "framework",
+    "method": "PPO / GRPO / REINFORCE++ / DPO implementations",
+    "paper_url": "https://github.com/OpenRLHF/OpenRLHF",
+    "repo_url": "https://github.com/OpenRLHF/OpenRLHF"
+  }
+]
