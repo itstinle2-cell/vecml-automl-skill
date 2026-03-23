@@ -1,7 +1,6 @@
 import { AgentBrowserSession } from './agentBrowser.js';
 import { parseTask } from './taskParser.js';
 import { summarizeText } from './summarizer.js';
-import { fetchPageText } from './webSearch.js';
 
 function findSearchBox(snapshot) {
   const refs = snapshot?.data?.refs ?? {};
@@ -21,6 +20,10 @@ function resolveDemoFirstResult(query) {
   ]);
 
   return knownResults.get(query.trim().toLowerCase()) ?? null;
+}
+
+function detectChallenge(snapshotText) {
+  return /cloudflare|verify you are human|security challenge|enable javascript and cookies/i.test(snapshotText);
 }
 
 export class ComputerUseAgent {
@@ -53,8 +56,13 @@ export class ComputerUseAgent {
     }
 
     await this.browser.open(firstResult.href);
-    const pageText = await fetchPageText(firstResult.href);
-    const summary = summarizeText(pageText, { maxSentences: 4 });
+    await this.browser.waitForLoad();
+    const pageSnapshot = await this.browser.snapshot();
+    const pageText = pageSnapshot?.data?.snapshot ?? '';
+    const blockedByChallenge = detectChallenge(pageText);
+    const summary = blockedByChallenge
+      ? 'The browser reached the target site, but the page is blocked by a verification challenge (for example Cloudflare / “Verify you are human”), so the agent cannot read the real content yet.'
+      : summarizeText(pageText, { maxSentences: 4 });
     const currentUrl = await this.browser.getUrl();
 
     return {
@@ -65,6 +73,7 @@ export class ComputerUseAgent {
         href: firstResult.href,
         finalUrl: currentUrl?.data?.url ?? null,
       },
+      blockedByChallenge,
       summary,
     };
   }
