@@ -41,7 +41,36 @@ const server = http.createServer(async (req, res) => {
       if (!fs.existsSync(dataPath) || !fs.readFileSync(dataPath, 'utf8').trim()) {
         await runNode(path.join(appDir, 'src', 'seed.js'), [], appDir);
       }
-      const output = await runNode(path.join(appDir, 'src', 'cli.js'), [prompt], appDir);
+      const output = await runNode(path.join(appDir, 'src', 'cli.js'), ['ask', prompt], appDir);
+      return sendJson(res, { ok: true, output });
+    }
+
+    if (req.method === 'POST' && req.url === '/api/memory/save-chat') {
+      const body = await readJson(req);
+      const sessionId = body.sessionId || 'web-demo';
+      const text = body.text || '';
+      const appDir = path.join(workspaceRoot, 'projects', 'personal-memory-assistant');
+      const output = await runNode(path.join(appDir, 'src', 'cli.js'), ['save-chat', sessionId, text], appDir);
+      return sendJson(res, { ok: true, output });
+    }
+
+    if (req.method === 'POST' && req.url === '/api/memory/remember') {
+      const body = await readJson(req);
+      const text = body.text || '';
+      const appDir = path.join(workspaceRoot, 'projects', 'personal-memory-assistant');
+      const output = await runNode(path.join(appDir, 'src', 'cli.js'), ['remember', text], appDir);
+      return sendJson(res, { ok: true, output });
+    }
+
+    if (req.method === 'GET' && req.url === '/api/memory/list-chats') {
+      const appDir = path.join(workspaceRoot, 'projects', 'personal-memory-assistant');
+      const output = await runNode(path.join(appDir, 'src', 'cli.js'), ['list-chats'], appDir);
+      return sendJson(res, { ok: true, output });
+    }
+
+    if (req.method === 'GET' && req.url === '/api/memory/list-memories') {
+      const appDir = path.join(workspaceRoot, 'projects', 'personal-memory-assistant');
+      const output = await runNode(path.join(appDir, 'src', 'cli.js'), ['list-memories'], appDir);
       return sendJson(res, { ok: true, output });
     }
 

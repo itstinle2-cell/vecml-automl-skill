@@ -22,3 +22,41 @@ async function runDemo(kind, inputId, outputId, button) {
     button.textContent = original;
   }
 }
+
+async function saveChat() {
+  const text = document.getElementById('memoryPrompt').value;
+  const output = document.getElementById('memoryOutput');
+  const res = await fetch('/api/memory/save-chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId: 'web-demo', text })
+  });
+  const data = await res.json();
+  output.textContent = data.ok ? data.output : `Error: ${data.error}`;
+}
+
+async function rememberNote() {
+  const text = document.getElementById('memoryPrompt').value;
+  const output = document.getElementById('memoryOutput');
+  const res = await fetch('/api/memory/remember', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+  const data = await res.json();
+  output.textContent = data.ok ? data.output : `Error: ${data.error}`;
+}
+
+async function listChats() {
+  const output = document.getElementById('memoryOutput');
+  const res = await fetch('/api/memory/list-chats');
+  const data = await res.json();
+  output.textContent = data.ok ? data.output : `Error: ${data.error}`;
+}
+
+async function listMemories() {
+  const output = document.getElementById('memoryOutput');
+  const res = await fetch('/api/memory/list-memories');
+  const data = await res.json();
+  output.textContent = data.ok ? data.output : `Error: ${data.error}`;
+}

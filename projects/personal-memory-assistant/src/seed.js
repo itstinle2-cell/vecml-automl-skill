@@ -1,10 +1,11 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ConversationStore } from './store.js';
+import { ConversationStore, MemoryStore } from './store.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const store = new ConversationStore(path.join(__dirname, '..', 'data', 'conversations.jsonl'));
+const memoryStore = new MemoryStore(path.join(__dirname, '..', 'data', 'memories.jsonl'));
 
 const entries = [
   {
@@ -31,4 +32,10 @@ for (const entry of entries) {
   store.add(entry);
 }
 
-console.log('Seeded demo conversations.');
+memoryStore.add({
+  timestamp: '2026-03-22T14:12:00-07:00',
+  category: 'project',
+  content: 'The user wants a real demo for the boss and dislikes hardcoded examples.'
+});
+
+console.log('Seeded demo conversations and memories.');

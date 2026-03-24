@@ -32,7 +32,13 @@
           <p>Store conversation history → retrieve relevant memory → answer from past interactions</p>
         </div>
         <textarea id="memoryPrompt">What did I say about my project yesterday?</textarea>
-        <button onclick="runDemo('memory', 'memoryPrompt', 'memoryOutput', this)">Run feature</button>
+        <div class="actions">
+          <button onclick="runDemo('memory', 'memoryPrompt', 'memoryOutput', this)">Ask memory</button>
+          <button onclick="saveChat()">Save chat</button>
+          <button onclick="rememberNote()">Remember this</button>
+          <button onclick="listChats()">List chats</button>
+          <button onclick="listMemories()">List memories</button>
+        </div>
         <pre id="memoryOutput">Ready.</pre>
       </section>
 
